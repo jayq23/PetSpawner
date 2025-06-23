@@ -1,0 +1,59 @@
+-- Pet Spawner Script — Grow a Garden (for Delta Executor)
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local rs = game:GetService("ReplicatedStorage")
+
+local petNames = {
+	"Raccoon", "Dragonfly", "Red Giant Ant", "Praying Mantis",
+	"Chicken Zombie", "Polar Bear", "Silver Monkey",
+	"Sea Otter", "Giant Ant", "Snail", "Squirrel",
+}
+
+local spawnRadius = 8
+local followDistance = 5
+local pets = {}
+
+-- Clone pets
+for _, name in ipairs(petNames) do
+	local m = rs:FindFirstChild(name)
+	if m and m:IsA("Model") and m.PrimaryPart then
+		local c = m:Clone()
+		c.Parent = workspace
+		table.insert(pets, c)
+	else
+		warn("Pet not found:", name)
+	end
+end
+
+-- Place around you
+local function place()
+	if char.PrimaryPart then
+		local center = char.PrimaryPart.Position
+		local step = math.rad(360 / #pets)
+		for i, pet in ipairs(pets) do
+			local a = step * (i - 1)
+			pet:SetPrimaryPartCFrame(CFrame.new(center + Vector3.new(math.cos(a),0,math.sin(a)) * spawnRadius))
+		end
+	end
+end
+
+place()
+
+-- Follow loop
+task.spawn(function()
+	while true do
+		if char.PrimaryPart then
+			local cpos = char.PrimaryPart.Position
+			local step = math.rad(360 / #pets)
+			for i, pet in ipairs(pets) do
+				if pet and pet.PrimaryPart then
+					local a = step * (i - 1)
+					local tgt = cpos + Vector3.new(math.cos(a),0,math.sin(a)) * followDistance
+					pet:PivotTo(CFrame.new(tgt))
+				end
+			end
+		end
+		task.wait(0.25)
+	end
+end)
